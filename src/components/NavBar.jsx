@@ -1,0 +1,13 @@
+import React from "react";
+import { Link } from "react-router-dom";
+
+export default function NavBar() {
+  return (
+    <nav className="bg-gray-800 text-white p-4 flex gap-6">
+      <Link to="/" className="hover:underline">🏠 Home</Link>
+      <Link to="/student" className="hover:underline">🎓 Student</Link>
+      <Link to="/company" className="hover:underline">🏢 Company</Link>
+      <Link to="/student/quiz">🧠 Quiz</Link>
+    </nav>
+  );
+}
