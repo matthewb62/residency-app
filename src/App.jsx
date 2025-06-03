@@ -5,7 +5,7 @@ import Home from "./pages/Home";
 import StudentPage from "./pages/StudentPage";
 import StudentQuiz from "./pages/StudentQuiz";
 import CompanyPage from "./pages/CompanyPage";
-
+import AdminPage from "./pages/AdmindPage";
 
 export default function App() {
   return (
@@ -16,6 +16,7 @@ export default function App() {
         <Route path="/student" element={<StudentPage />} />
         <Route path="/student/quiz" element={<StudentQuiz />} />
         <Route path="/company" element={<CompanyPage />} />
+        <Route path="/admin" element={<AdminPage />} />
       </Routes>
     </BrowserRouter>
   );

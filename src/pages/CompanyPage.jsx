@@ -1,11 +1,87 @@
-// src/pages/CompanyPage.jsx
-import React from "react";
+// CompanyRanking.jsx
+import React, { useEffect, useState } from "react";
+import { createClient } from "@supabase/supabase-js";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
-export default function CompanyPage() {
+const supabase = createClient(
+  "https://skavheoivhbrtddpvkog.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNrYXZoZW9pdmhicnRkZHB2a29nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg1MjQwOTMsImV4cCI6MjA2NDEwMDA5M30.M9mPXBsmtxXKfHwcCPbbFSIWPFv0R3aAO0L4EQCi77g"
+);
+
+export default function CompanyRanking() {
+  const [students, setStudents] = useState([]);
+  const companyId = "123456a"; // Replace with dynamic value from login/session
+
+  useEffect(() => {
+    const fetchStudents = async () => {
+      const { data, error } = await supabase
+        .from("student_account")
+        .select("student_email, name");
+
+      if (!error && data) {
+        const formatted = data.map((s, index) => ({
+          id: s.student_email,
+          name: `${s.name}`,
+          email: s.student_email,
+        }));
+        setStudents(formatted);
+      }
+    };
+    fetchStudents();
+  }, []);
+
+  const onDragEnd = (result) => {
+    if (!result.destination) return;
+    const updated = Array.from(students);
+    const [moved] = updated.splice(result.source.index, 1);
+    updated.splice(result.destination.index, 0, moved);
+    setStudents(updated);
+  };
+
+  const handleSubmit = async () => {
+    const rankings = students.map((student, index) => ({
+      company_id: companyId,
+      student_email: student.email,
+      ranking: index + 1,
+    }));
+
+    const { error } = await supabase.from("company_rankings").upsert(rankings);
+    if (error) {
+      alert("Error saving rankings to Supabase");
+    } else {
+      alert("Rankings submitted successfully!");
+    }
+  };
+
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold">🏢 Company Portal</h2>
-      <p className="mt-2">Company representatives will be able to rank students here.</p>
+    <div className="p-4">
+      <h1 className="text-2xl font-bold">Rank Students</h1>
+      <DragDropContext onDragEnd={onDragEnd}>
+        <Droppable droppableId="students">
+          {(provided) => (
+            <ul {...provided.droppableProps} ref={provided.innerRef} className="min-h-[200px]">
+              {students.map((student, index) => (
+                <Draggable key={student.id} draggableId={student.id} index={index}>
+                  {(provided) => (
+                    <li
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      {...provided.dragHandleProps}
+                      className="p-2 border-b bg-white cursor-move"
+                    >
+                      {student.name} ({student.email})
+                    </li>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+            </ul>
+          )}
+        </Droppable>
+      </DragDropContext>
+      <button className="mt-4 px-4 py-2 bg-green-600 text-white rounded" onClick={handleSubmit}>
+        Submit Rankings
+      </button>
     </div>
   );
 }
