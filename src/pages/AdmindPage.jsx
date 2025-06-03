@@ -31,29 +31,49 @@ export default function ISEAdminPage() {
     fetchMatches();
   }, []);
 
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">ISE Admin: Final Matches</h1>
-      {matches.length === 0 ? (
-        <p>No matches found yet.</p>
-      ) : (
-        <table className="min-w-full table-auto border">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="px-4 py-2 border">Student Name</th>
-              <th className="px-4 py-2 border">Company</th>
-            </tr>
-          </thead>
-          <tbody>
+return (
+  <div className="p-6">
+    <h1 className="text-2xl font-bold mb-4">ISE Admin: Final Matches</h1>
+
+    <button
+      onClick={async () => {
+        try {
+          const response = await fetch("http://localhost:8080/run-matching", {
+            method: "POST",
+          });
+          const text = await response.text();
+          alert(text);
+        } catch (err) {
+          console.error("Error running matching:", err);
+          alert("Failed to run matching algorithm.");
+        }
+      }}
+      className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mb-4"
+    >
+      🔄 Run Matching Algorithm
+    </button>
+
+    {matches.length === 0 ? (
+      <p>No matches found yet.</p>
+    ) : (
+      <table className="min-w-full table-auto border">
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="px-4 py-2 border">Student Name</th>
+            <th className="px-4 py-2 border">Company</th>
+          </tr>
+        </thead>
+        <tbody>
           {matches.map((match) => (
-  <tr key={`${match.student_email}-${match.company_id}`}>
-    <td>{match.student_account?.name}</td>
-    <td>{match.company_data?.company_name}</td>
-  </tr>
-))}
-          </tbody>
-        </table>
-      )}
-    </div>
-  );
+            <tr key={`${match.student_email}-${match.company_id}`}>
+              <td>{match.student_account?.name}</td>
+              <td>{match.company_data?.company_name}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    )}
+  </div>
+);
+
 }

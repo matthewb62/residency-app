@@ -2,7 +2,7 @@ package com.example.demo;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -26,22 +26,80 @@ public class MatchController {
                 .build();
     }
 
-    @GetMapping("/run-matching")
+    @PostMapping("/run-matching")
     public String runMatching() {
-        List<StudentRanking> rankings = fetchStudentRankings();
+        List<StudentRanking> studentRankings = fetchStudentRankings();
+        List<CompanyRanking> companyRankings = fetchCompanyRankings();
+        List<StudentAccount> studentAccounts = fetchStudentAccounts();
+        List<CompanyPosition> companyPositions = fetchCompanyPositions();
 
-        // Placeholder matching logic - sort and assign top company to each student
-        Map<String, String> matches = new HashMap<>();
-        rankings.stream()
-                .collect(Collectors.groupingBy(r -> r.student_email))
-                .forEach((email, list) -> {
-                    list.sort(Comparator.comparingInt(r -> r.ranking));
-                    matches.put(email, list.get(0).company_id);
-                });
+        Map<String, Integer> companyCapacity = new HashMap<>();
+        for (CompanyPosition cp : companyPositions) {
+            companyCapacity.put(cp.company_id, cp.num_positions);
+        }
 
-        // Prepare JSON for Supabase insert
+        Map<String, Integer> currentAssignments = new HashMap<>();
+
+        Map<String, Double> qcaMap = new HashMap<>();
+        double minQCA = studentAccounts.stream().mapToDouble(s -> s.QCA).min().orElse(0);
+        double maxQCA = studentAccounts.stream().mapToDouble(s -> s.QCA).max().orElse(1);
+
+        for (StudentAccount sa : studentAccounts) {
+            double normalizedQCA = (sa.QCA - minQCA) / (maxQCA - minQCA);
+            qcaMap.put(sa.student_email, normalizedQCA);
+        }
+
+        Map<String, Map<String, Integer>> studentRankMap = new HashMap<>();
+        Map<String, Map<String, Integer>> companyRankMap = new HashMap<>();
+
+        for (StudentRanking sr : studentRankings) {
+            studentRankMap.computeIfAbsent(sr.student_email, k -> new HashMap<>()).put(sr.company_id, sr.ranking);
+        }
+
+        for (CompanyRanking cr : companyRankings) {
+            companyRankMap.computeIfAbsent(cr.company_id, k -> new HashMap<>()).put(cr.student_email, cr.ranking);
+        }
+
+        Map<String, String> finalMatches = new HashMap<>();
+        for (String student : studentRankMap.keySet()) {
+            String bestCompany = null;
+            double bestScore = -1;
+
+            for (String company : studentRankMap.get(student).keySet()) {
+                int sRank = studentRankMap.get(student).getOrDefault(company, 9999);
+                int cRank = companyRankMap.getOrDefault(company, new HashMap<>()).getOrDefault(student, 9999);
+
+                double studentScore = (sRank == 9999) ? 0 : (10.0 - sRank + 1) / 10.0;
+                double companyScore = (cRank == 9999) ? 0 : (10.0 - cRank + 1) / 10.0;
+                double qcaScore = qcaMap.getOrDefault(student, 0.0);
+
+                double finalScore = 0.2 * qcaScore + 0.2 * studentScore + 0.6 * companyScore;
+
+                int current = currentAssignments.getOrDefault(company, 0);
+                int capacity = companyCapacity.getOrDefault(company, Integer.MAX_VALUE);
+
+                if (finalScore > bestScore && current < capacity) {
+                    bestScore = finalScore;
+                    bestCompany = company;
+                }
+            }
+            if (bestCompany != null) {
+                finalMatches.put(student, bestCompany);
+                currentAssignments.put(bestCompany, currentAssignments.getOrDefault(bestCompany, 0) + 1);
+            }
+        }
+
+        webClient.delete()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/rest/v1/matches")
+                        .queryParam("student_email", "neq.null")
+                        .build())
+                .retrieve()
+                .bodyToMono(String.class)
+                .block();
+
         List<Map<String, String>> matchResults = new ArrayList<>();
-        for (Map.Entry<String, String> entry : matches.entrySet()) {
+        for (Map.Entry<String, String> entry : finalMatches.entrySet()) {
             Map<String, String> record = new HashMap<>();
             record.put("student_email", entry.getKey());
             record.put("company_id", entry.getValue());
@@ -64,6 +122,51 @@ public class MatchController {
                     .uri("/rest/v1/student_rankings?select=*")
                     .retrieve()
                     .bodyToMono(StudentRanking[].class)
+                    .block();
+
+            return Arrays.asList(Objects.requireNonNull(response));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+
+    private List<CompanyRanking> fetchCompanyRankings() {
+        try {
+            CompanyRanking[] response = webClient.get()
+                    .uri("/rest/v1/company_rankings?select=*")
+                    .retrieve()
+                    .bodyToMono(CompanyRanking[].class)
+                    .block();
+
+            return Arrays.asList(Objects.requireNonNull(response));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+
+    private List<StudentAccount> fetchStudentAccounts() {
+        try {
+            StudentAccount[] response = webClient.get()
+                    .uri("/rest/v1/student_account?select=student_email,QCA")
+                    .retrieve()
+                    .bodyToMono(StudentAccount[].class)
+                    .block();
+
+            return Arrays.asList(Objects.requireNonNull(response));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+
+    private List<CompanyPosition> fetchCompanyPositions() {
+        try {
+            CompanyPosition[] response = webClient.get()
+                    .uri("/rest/v1/company_data?select=company_id,num_positions")
+                    .retrieve()
+                    .bodyToMono(CompanyPosition[].class)
                     .block();
 
             return Arrays.asList(Objects.requireNonNull(response));
