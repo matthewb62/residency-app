@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabaseClient";
 
+
 export default function CompanyLoginPage() {
     const navigate = useNavigate();
     const [companyId, setCompanyId] = useState("");

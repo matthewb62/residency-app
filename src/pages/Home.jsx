@@ -1,4 +1,4 @@
-// src/pages/Home.jsx
+
 import React, { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 
@@ -36,5 +36,6 @@ export default function Home() {
             </h1>
             <p className="mt-4">Use the navigation bar to access your section.</p>
         </div>
+
     );
 }

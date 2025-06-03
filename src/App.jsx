@@ -2,6 +2,7 @@ import React from "react";
 import "leaflet/dist/leaflet.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+
 import NavBar from "./components/NavBar";
 import Home from "./pages/Home";
 import StudentPage from "./pages/StudentPage";

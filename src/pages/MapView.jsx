@@ -38,7 +38,7 @@ export default function MapView() {
                     attribution="&copy; OpenStreetMap contributors"
                 />
 
-                {/* Hardcoded marker for testing */}
+
                 <Marker position={[52.6730648, -8.5691814]}>
                     <Popup>
                         <strong>Analog Devices</strong><br />
