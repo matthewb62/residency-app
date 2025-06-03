@@ -81,6 +81,7 @@ export default function Quiz() {
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Residency Quiz</h1>
 
+
       {/* Location Ratings */}
       <h2 className="font-semibold">Rate Locations:</h2>
       {counties.map((county) => (
