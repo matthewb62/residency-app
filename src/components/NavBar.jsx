@@ -8,6 +8,7 @@ export default function NavBar() {
       <Link to="/student" className="hover:underline">🎓 Student</Link>
       <Link to="/company" className="hover:underline">🏢 Company</Link>
       <Link to="/student/quiz">🧠 Quiz</Link>
+      <Link to="/admin"> 🕵️ Admin</Link>
     </nav>
   );
 }
