@@ -1,3 +1,4 @@
+// Full working version of JobsBoard component with CV upload and review modal
 import { useEffect, useState } from "react";
 import { supabase } from "../supabaseClient";
 
@@ -7,9 +8,44 @@ export default function JobsBoard() {
   const [selectedCompany, setSelectedCompany] = useState(null);
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState("");
+  const [showCVModal, setShowCVModal] = useState(false);
+  const [selectedCVFile, setSelectedCVFile] = useState(null);
+  const [uploadingCV, setUploadingCV] = useState(false);
+  const [user, setUser] = useState(null);
+  const [studentId, setStudentId] = useState(null);
 
   useEffect(() => {
     fetchData();
+  }, []);
+
+  useEffect(() => {
+    async function fetchUserAndStudentId() {
+      const {
+        data: { user },
+        error: authError
+      } = await supabase.auth.getUser();
+
+      if (authError) {
+        console.error("Auth error:", authError);
+        return;
+      }
+
+      setUser(user);
+
+      const { data: studentRecord, error: fetchError } = await supabase
+        .from("student_account")
+        .select("id")
+        .eq("student_email", user.email)
+        .single();
+
+      if (fetchError) {
+        console.error("Error fetching student ID:", fetchError);
+      } else {
+        setStudentId(studentRecord.id);
+      }
+    }
+
+    fetchUserAndStudentId();
   }, []);
 
   async function fetchData() {
@@ -87,20 +123,61 @@ export default function JobsBoard() {
       review,
     };
 
-    console.log("🔄 Submitting review payload:", payload);
-
     const { error } = await supabase.from("reviews").insert([payload]);
 
     if (error) {
-      console.error("❌ Supabase Insert Error:");
-      console.error("Message:", error.message);
-      console.error("Details:", error.details);
-      console.error("Hint:", error.hint);
+      console.error("❌ Supabase Insert Error:", error);
       alert("Error submitting review");
     } else {
-      await fetchData(); // refresh to show new review
+      await fetchData();
       alert("✅ Review submitted!");
       closeModal();
+    }
+  };
+
+  const handleUploadCV = async () => {
+    if (!selectedCVFile || !selectedCompany) {
+      alert("Please select a file.");
+      return;
+    }
+
+    setUploadingCV(true);
+    if (!studentId) {
+      alert("Student ID not loaded yet. Please wait.");
+      return;
+    }
+    const filePath = `${studentId}/${selectedCVFile.name}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("student-cvs")
+      .upload(filePath, selectedCVFile, { upsert: true });
+
+    if (uploadError) {
+      console.error(uploadError);
+      alert("File upload failed.");
+      setUploadingCV(false);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage.from("student-cvs").getPublicUrl(filePath);
+
+    const { error: insertError } = await supabase.from("cvs").insert([
+      {
+        student_id: studentId,
+        company_id: selectedCompany.company_id,
+        cv_url: urlData.publicUrl,
+      },
+    ]);
+
+    setUploadingCV(false);
+
+    if (insertError) {
+      console.error(insertError);
+      alert("Failed to save CV entry.");
+    } else {
+      alert("✅ CV uploaded successfully!");
+      setShowCVModal(false);
+      setSelectedCVFile(null);
     }
   };
 
@@ -133,14 +210,10 @@ export default function JobsBoard() {
             <p className="mb-1 text-sm"><strong>Residency Duration:</strong> {company.duration}</p>
             <p className="mb-1 text-sm"><strong>Positions Available:</strong> {company.num_positions}</p>
             <p className="mb-4 text-sm"><strong>Contact:</strong> {company.contact_email}</p>
-            <button
-              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 text-sm mb-4"
-              onClick={() => openModal(company)}
-            >
-              Rate & Review
-            </button>
+            <button className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 text-sm mb-2" onClick={() => openModal(company)}>Rate & Review</button>
+            <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm" onClick={() => { setSelectedCompany(company); setShowCVModal(true); }}>Upload CV</button>
             {company.reviews.length > 0 && (
-              <div className="border-t pt-2">
+              <div className="border-t pt-2 mt-4">
                 <h3 className="text-sm font-semibold text-gray-700 mb-1">Student Reviews:</h3>
                 <ul className="list-disc pl-5 text-sm text-gray-600">
                   {company.reviews.map((text, idx) => (
@@ -156,42 +229,29 @@ export default function JobsBoard() {
       {showModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-xl w-[90%] max-w-md">
-            <h2 className="text-xl font-bold mb-4 text-center text-green-800">
-              Review for {selectedCompany?.company_name}
-            </h2>
+            <h2 className="text-xl font-bold mb-4 text-center text-green-800">Review for {selectedCompany?.company_name}</h2>
             <div className="flex justify-center space-x-2 mb-4">
               {[1, 2, 3, 4, 5].map((star) => (
-                <span
-                  key={star}
-                  onClick={() => setRating(star)}
-                  className={`cursor-pointer text-3xl ${
-                    star <= rating ? "text-yellow-400" : "text-gray-300"
-                  }`}
-                >
-                  ★
-                </span>
+                <span key={star} onClick={() => setRating(star)} className={`cursor-pointer text-3xl ${star <= rating ? "text-yellow-400" : "text-gray-300"}`}>★</span>
               ))}
             </div>
-            <textarea
-              className="w-full border rounded p-2 mb-4 text-sm"
-              placeholder="Write your review..."
-              rows="4"
-              value={review}
-              onChange={(e) => setReview(e.target.value)}
-            />
+            <textarea className="w-full border rounded p-2 mb-4 text-sm" placeholder="Write your review..." rows="4" value={review} onChange={(e) => setReview(e.target.value)} />
             <div className="flex justify-between">
-              <button
-                className="bg-gray-300 px-4 py-2 rounded text-sm"
-                onClick={closeModal}
-              >
-                Cancel
-              </button>
-              <button
-                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 text-sm"
-                onClick={handleSubmitReview}
-              >
-                Submit
-              </button>
+              <button className="bg-gray-300 px-4 py-2 rounded text-sm" onClick={closeModal}>Cancel</button>
+              <button className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 text-sm" onClick={handleSubmitReview}>Submit</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showCVModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-xl w-[90%] max-w-md">
+            <h2 className="text-xl font-bold mb-4 text-center text-blue-800">Upload CV for {selectedCompany?.company_name}</h2>
+            <input type="file" accept=".pdf" onChange={(e) => setSelectedCVFile(e.target.files[0])} className="mb-4 w-full text-sm" />
+            <div className="flex justify-between">
+              <button className="bg-gray-300 px-4 py-2 rounded text-sm" onClick={() => { setShowCVModal(false); setSelectedCVFile(null); }}>Cancel</button>
+              <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm" onClick={handleUploadCV} disabled={uploadingCV}>{uploadingCV ? "Uploading..." : "Submit CV"}</button>
             </div>
           </div>
         </div>
