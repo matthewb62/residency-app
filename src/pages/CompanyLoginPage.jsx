@@ -14,7 +14,7 @@ export default function CompanyLoginPage() {
         setError(""); // Clear old error
 
         const { data, error: fetchError } = await supabase
-            .from("company_account")
+            .from("company_data")
             .select("*")
             .eq("company_id", companyId)
             .single();
