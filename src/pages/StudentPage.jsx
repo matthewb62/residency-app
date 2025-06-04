@@ -7,8 +7,7 @@ const supabase = createClient(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNrYXZoZW9pdmhicnRkZHB2a29nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg1MjQwOTMsImV4cCI6MjA2NDEwMDA5M30.M9mPXBsmtxXKfHwcCPbbFSIWPFv0R3aAO0L4EQCi77g"
 );
 
-// CONSTANT - WILL BE CHANGED LATER
-const studentEmail = "24408026@studentmail.ul.ie";
+const studentEmail = localStorage.getItem("student_email");
 
 export default function StudentRanking() {
   const [companies, setCompanies] = useState([]);
@@ -59,31 +58,35 @@ export default function StudentRanking() {
     let rank = 1;
     
     companies.forEach((company) => {
-      if (blocked.has(company.company_id)) {
-        ranked.push({
-          student_email: studentEmail,
-          company_id: company.company_id,
-          ranking: 9999,
-        });
-      } else {
-        ranked.push({
-          student_email: studentEmail,
-          company_id: company.company_id,
-          ranking: rank++,
-        });
-      }
+if (blocked.has(company.company_id)) {
+  ranked.push({
+    student_email: studentEmail,
+    company_id: company.company_id,
+    rank: 9999,
+    ranked_by: "student",
+  });
+} else {
+  ranked.push({
+    student_email: studentEmail,
+    company_id: company.company_id,
+    rank: rank++,
+    ranked_by: "student",
+  });
+}
+
     });
   
     console.log(ranked); // for debugging
   
     // 🔥 delete any old rankings for this student before inserting
     await supabase
-      .from("student_rankings")
-      .delete()
-      .eq("student_email", studentEmail);
+    .from("rankings")
+    .delete()
+    .eq("student_email", studentEmail)
+    .eq("ranked_by", "student");
   
     const { error: insertError } = await supabase
-      .from("student_rankings")
+      .from("rankings")
       .insert(ranked);
   
     if (insertError) {

@@ -10,7 +10,9 @@ const supabase = createClient(
 
 export default function CompanyRanking() {
   const [students, setStudents] = useState([]);
-  const companyId = "123456a"; // Replace with dynamic value from login/session
+  const companyId = localStorage.getItem("company_id");
+
+
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -42,15 +44,20 @@ export default function CompanyRanking() {
     const rankings = students.map((student, index) => ({
       company_id: companyId,
       student_email: student.email,
-      ranking: index + 1,
+      rank: index + 1,
+      ranked_by: "company",
     }));
 
-    const { error } = await supabase.from("company_rankings").upsert(rankings);
+   const { error } = await supabase
+  .from("rankings")
+  .upsert(rankings, { onConflict: ["student_email", "company_id", "ranked_by"] });
+
     if (error) {
       alert("Error saving rankings to Supabase");
     } else {
       alert("Rankings submitted successfully!");
     }
+    
   };
 
   return (
