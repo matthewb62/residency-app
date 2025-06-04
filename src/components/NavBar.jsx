@@ -11,6 +11,7 @@ export default function NavBar() {
             <Link to="/student/quiz" className="hover:underline">🧠 Quiz</Link>
             <Link to="/map" className="hover:underline">🗺️ Map</Link>
             <Link to="/admin"> 🕵️ Admin</Link>
+            <Link to="/jobs" className="hover:underline">🗺️ Jobs</Link>
         </nav>
     );
 }
