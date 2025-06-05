@@ -23,7 +23,8 @@ jest.mock("../supabaseClient", () => ({
 }));
 
 afterEach(() => {
-    jest.resetAllMocks(); // Reset any mocks like fetch between tests
+    jest.resetAllMocks();
+    global.fetch = undefined; // 🔄 Ensures clean fetch state
 });
 
 describe("Quiz Component", () => {
@@ -38,6 +39,7 @@ describe("Quiz Component", () => {
         await act(async () => {
             render(<Quiz />);
         });
+
         await waitFor(() => {
             expect(screen.getByTestId("slider-location-Limerick")).toBeInTheDocument();
             expect(screen.getByTestId("slider-sector-Health")).toBeInTheDocument();
@@ -61,6 +63,8 @@ describe("Quiz Component", () => {
 
         await waitFor(() => {
             expect(screen.getByTestId("slider-location-Limerick")).toBeInTheDocument();
+            expect(screen.getByTestId("slider-sector-Health")).toBeInTheDocument();
+            expect(screen.getByTestId("checkbox-React")).toBeInTheDocument();
         });
 
         fireEvent.change(screen.getByTestId("slider-location-Limerick"), {
@@ -71,14 +75,13 @@ describe("Quiz Component", () => {
         });
         fireEvent.click(screen.getByTestId("checkbox-React"));
 
-        // ✅ Mock fetch HERE just before submitting
         global.fetch = jest.fn(() =>
             Promise.resolve({
                 ok: true,
                 json: () =>
                     Promise.resolve([
-                        { company_name: "Company A" },
-                        { company_name: "Company B" },
+                        "Company A",
+                        "Company B",
                     ]),
             })
         );
