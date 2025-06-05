@@ -78,117 +78,136 @@ export default function Quiz() {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Residency Quiz</h1>
-
+    <div
+      className="p-6 min-h-screen bg-cover bg-center text-white"
+      style={{ backgroundImage: "url('/quiz_bg.png')" }}
+    >
+      <h1 className="text-4xl font-bold mb-2">Residency Quiz</h1>
+      <p className="text-lg mb-6 text-gray-300">This quiz is designed to help you discover the residency that best fits your preferences.</p>
 
       {/* Location Ratings */}
-      <h2 className="font-semibold">Rate Locations:</h2>
-      {counties.map((county) => (
-        <div key={county} className="mb-2">
-          <label>{county}: </label>
-          <input
-            type="range"
-            min="1"
-            max="5"
-            value={locationRatings[county] || 3}
-            onChange={(e) =>
-              setLocationRatings({ ...locationRatings, [county]: parseInt(e.target.value) })
-            }
-          />
-        </div>
-      ))}
+      <div className="bg-[#101828] bg-opacity-90 p-6 rounded-xl mb-6">
+        <h2 className="font-semibold text-xl mb-4">📍 Rate Locations:</h2>
+        {counties.map((county) => (
+          <div key={county} className="mb-4">
+            <label className="block mb-1">{county}</label>
+            <input
+              type="range"
+              min="1"
+              max="5"
+              value={locationRatings[county] || 3}
+              onChange={(e) =>
+                setLocationRatings({ ...locationRatings, [county]: parseInt(e.target.value) })
+              }
+              className="w-full h-3 rounded bg-[#016630]"
+            />
+          </div>
+        ))}
+      </div>
 
       {/* Sector Ratings */}
-      <h2 className="font-semibold mt-4">Rate Sectors:</h2>
-      {sectors.map((sector) => (
-        <div key={sector} className="mb-2">
-          <label>{sector}: </label>
-          <input
-            type="range"
-            min="1"
-            max="5"
-            value={sectorRatings[sector] || 3}
-            onChange={(e) =>
-              setSectorRatings({ ...sectorRatings, [sector]: parseInt(e.target.value) })
-            }
-          />
-        </div>
-      ))}
+      <div className="bg-[#101828] bg-opacity-90 p-6 rounded-xl mb-6">
+        <h2 className="font-semibold text-xl mb-4">🏭 Rate Sectors:</h2>
+        {sectors.map((sector) => (
+          <div key={sector} className="mb-4">
+            <label className="block mb-1">{sector}</label>
+            <input
+              type="range"
+              min="1"
+              max="5"
+              value={sectorRatings[sector] || 3}
+              onChange={(e) =>
+                setSectorRatings({ ...sectorRatings, [sector]: parseInt(e.target.value) })
+              }
+              className="w-full h-3 rounded bg-[#016630]"
+            />
+          </div>
+        ))}
+      </div>
 
       {/* Tech Preferences */}
-      <h2 className="font-semibold mt-4">Select Preferred Tools (max 3):</h2>
-      {tools.map((tool) => (
-        <div key={tool}>
-          <label>
-            <input
-              type="checkbox"
-              checked={techPreferences.includes(tool)}
-              disabled={!techPreferences.includes(tool) && techPreferences.length >= 3}
-              onChange={(e) => {
-                setTechPreferences((prev) => {
-                  if (e.target.checked) {
-                    if (prev.length < 3) {
-                      return [...prev, tool];
+      <div className="bg-[#101828] bg-opacity-90 p-6 rounded-xl mb-6">
+        <h2 className="font-semibold text-xl mb-4">🛠️ Select Preferred Tools (max 3):</h2>
+        {tools.map((tool) => (
+          <div key={tool} className="mb-2">
+            <label>
+              <input
+                type="checkbox"
+                checked={techPreferences.includes(tool)}
+                disabled={!techPreferences.includes(tool) && techPreferences.length >= 3}
+                onChange={(e) => {
+                  setTechPreferences((prev) => {
+                    if (e.target.checked) {
+                      if (prev.length < 3) {
+                        return [...prev, tool];
+                      } else {
+                        alert("You can only select up to 3 tools.");
+                        return prev;
+                      }
                     } else {
-                      alert("You can only select up to 3 tools.");
-                      return prev;
+                      return prev.filter((t) => t !== tool);
                     }
-                  } else {
-                    return prev.filter((t) => t !== tool);
-                  }
-                });
-              }}
-            />
-            {tool}
-          </label>
-        </div>
-      ))}
+                  });
+                }}
+                className="mr-2"
+              />
+              {tool}
+            </label>
+          </div>
+        ))}
+      </div>
 
       {/* Company Size Ratings */}
-      <h2 className="font-semibold mt-4">Rate Company Sizes:</h2>
-      {["Startup", "Small Company", "Medium", "Large", "Multinational"].map((size) => (
-        <div key={size}>
-          <label>{size}</label>
-          <input
-            type="range"
-            min="1"
-            max="5"
-            value={sizeRatings[size] || 3}
-            onChange={(e) =>
-              setSizeRatings({ ...sizeRatings, [size]: parseInt(e.target.value) })
-            }
-          />
-        </div>
-      ))}
+      <div className="bg-[#101828] bg-opacity-90 p-6 rounded-xl mb-6">
+        <h2 className="font-semibold text-xl mb-4">🏢 Rate Company Sizes:</h2>
+        {["Startup", "Small Company", "Medium", "Large", "Multinational"].map((size) => (
+          <div key={size} className="mb-4">
+            <label className="block mb-1">{size}</label>
+            <input
+              type="range"
+              min="1"
+              max="5"
+              value={sizeRatings[size] || 3}
+              onChange={(e) =>
+                setSizeRatings({ ...sizeRatings, [size]: parseInt(e.target.value) })
+              }
+              className="w-full h-3 rounded bg-[#016630]"
+            />
+          </div>
+        ))}
+      </div>
 
       {/* Pay & Remote */}
-      <div className="mt-4">
-        <label>Pay Importance (1–5):</label>
+      <div className="bg-[#101828] bg-opacity-90 p-6 rounded-xl mb-6">
+        <h2 className="font-semibold text-xl mb-4">💰 Pay Importance:</h2>
         <input
           type="range"
           min="1"
           max="5"
           value={payImportance}
           onChange={(e) => setPayImportance(parseInt(e.target.value))}
+          className="w-full h-3 rounded bg-[#016630] mb-4"
         />
-      </div>
 
-      <div>
-        <label>Remote Preference (1–5):</label>
+        <h2 className="font-semibold text-xl mb-4">🏠 Remote Preference:</h2>
         <input
           type="range"
           min="1"
           max="5"
           value={remoteImportance}
           onChange={(e) => setRemoteImportance(parseInt(e.target.value))}
+          className="w-full h-3 rounded bg-[#016630]"
         />
       </div>
 
       {/* Duration */}
-      <div className="mt-4">
-        <label>Duration:</label>
-        <select value={duration} onChange={(e) => setDuration(e.target.value)}>
+      <div className="bg-[#101828] bg-opacity-90 p-6 rounded-xl mb-6">
+        <h2 className="font-semibold text-xl mb-4">⏳ Select Residency Duration:</h2>
+        <select
+          value={duration}
+          onChange={(e) => setDuration(e.target.value)}
+          className="w-full p-2 rounded text-black"
+        >
           <option>Residency 1</option>
           <option>Residency 2</option>
           <option>Residency 1+2</option>
@@ -197,23 +216,24 @@ export default function Quiz() {
       </div>
 
       {/* Submit */}
-      <button
-        className="mt-6 px-4 py-2 bg-blue-600 text-white rounded"
-        onClick={handleSubmit}
-        disabled={loading}
-      >
-        {loading ? "Matching..." : "Find Matches"}
-      </button>
+      <div className="text-center">
+        <button
+          className="px-6 py-3 bg-[#016630] text-white rounded-lg text-lg hover:bg-green-700 transition"
+          onClick={handleSubmit}
+          disabled={loading}
+        >
+          {loading ? "Matching..." : "Find Matches"}
+        </button>
+      </div>
 
       {/* Results */}
-      <div className="mt-6">
-        <h2 className="text-xl font-semibold mb-2">Top Matches:</h2>
+      <div className="mt-10 bg-[#101828] bg-opacity-90 p-6 rounded-xl">
+        <h2 className="text-xl font-semibold mb-4">🎯 Top Matches:</h2>
         {results.length === 0 && !loading && <p>No matches found.</p>}
         {results.map((name, idx) => (
-          <div key={idx} className="border-b py-2">{name}</div>
+          <div key={idx} className="border-b border-gray-600 py-2">{name}</div>
         ))}
       </div>
     </div>
   );
 }
-

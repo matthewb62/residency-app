@@ -1,41 +1,35 @@
-
-import React, { useEffect, useState } from "react";
-import { supabase } from "../supabaseClient";
+import React from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Home() {
-    const [userData, setUserData] = useState(null);
+  const navigate = useNavigate();
 
-    useEffect(() => {
-        const fetchUser = async () => {
-            const email = localStorage.getItem("student_email");
-            if (!email) return;
+  return (
+    <div className="min-h-screen bg-gradient-to-r from-[#0B0C2A] to-[#1DB96E] text-gray-100 flex flex-col items-center justify-center gap-6 p-6">
+      <h1 className="text-4xl font-bold text-white mb-6 drop-shadow-lg">
+        Welcome to the Residency System
+      </h1>
 
-            const { data, error } = await supabase
-                .from("student_account")
-                .select("name")
-                .eq("student_email", email)
-                .single();
+      <button
+        onClick={() => navigate("/student-login")}
+        className="bg-[#1DB96E] hover:bg-[#1aa860] text-white px-8 py-4 rounded-xl shadow-lg text-xl flex items-center gap-2 transition"
+      >
+        🎓 Student Hub
+      </button>
 
-            if (error) {
-                console.error("Error fetching user data:", error.message);
-            } else {
-                setUserData(data);
-            }
-        };
+      <button
+        onClick={() => navigate("/company-login")}
+        className="bg-[#135847] hover:bg-[#0f4739] text-white px-8 py-4 rounded-xl shadow-lg text-xl flex items-center gap-2 transition"
+      >
+        🏢 Company Hub
+      </button>
 
-        fetchUser();
-    }, []);
-
-    return (
-        <div className="p-6">
-            <h1 className="text-3xl font-bold">
-                🏠{" "}
-                {userData
-                    ? `${userData.name}, welcome to the Residency Portal`
-                    : "Loading..."}
-            </h1>
-            <p className="mt-4">Use the navigation bar to access your section.</p>
-        </div>
-
-    );
+      <button
+        onClick={() => navigate("/admin")}
+        className="bg-[#0B0C2A] hover:bg-[#050618] text-white px-8 py-4 rounded-xl shadow-lg text-xl flex items-center gap-2 transition"
+      >
+        🛠️ Admin Hub
+      </button>
+    </div>
+  );
 }

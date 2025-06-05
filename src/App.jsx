@@ -14,6 +14,9 @@ import CompanyPage from "./pages/CompanyPage"
 import AdminLoginPage from "./pages/AdminLoginPage";
 import AdminPage from "./pages/AdminPage";
 import JobsBoard from "./pages/JobsBoard";
+import StudentBoard from "./pages/StudentBoard";
+import StudentHub from "./pages/StudentHub";
+import CompanyHub from "./pages/CompanyHub";
 
 export default function App() {
     return (
@@ -25,12 +28,21 @@ export default function App() {
                 <Route path="/student" element={<StudentPage />} />
                 <Route path="/student-login" element={<StudentLoginPage />} />
                 <Route path="/company-login" element={<CompanyLoginPage />} />
-                <Route path="/student/quiz" element={<Quiz />} />
+                <Route path="/quiz" element={<Quiz />} />
                 <Route path="/map" element={<MapView />} />
                 <Route path="/company" element={<CompanyPage />} />
                 <Route path="/admin" element={<AdminLoginPage />} />
                 <Route path="/adminpage" element={<AdminPage />} />
                 <Route path="/jobs" element={<JobsBoard />} /> {/* 👈 NEW route */}
+                <Route path="/student-board" element={<StudentBoard />} /> {/* 👈 NEW route */}
+                <Route path="/studentHub" element={<StudentHub />}/>{/* 👈 NEW route */}
+                <Route path="/studentPage" element={<StudentPage />}/>{/* 👈 NEW route */}
+                <Route path="/companyHub" element={<CompanyHub />}/>{/* 👈 NEW route */}
+                 <Route path="/companyPage" element={<CompanyPage />}/>{/* 👈 NEW route */}
+
+
+
+
             </Routes>
         </BrowserRouter>
     );
